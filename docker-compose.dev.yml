@@ -1,0 +1,22 @@
+# Local development — run n8n in Docker, Next.js on host (recommended)
+#   docker compose up n8n -d
+#   cp .env.docker.example .env  # set N8N_WEBHOOK_URL=http://localhost:5678/webhook/...
+#   npm run dev
+#
+# Or expose n8n only:
+#   docker compose -f docker-compose.yml up n8n -d
+
+name: socialflow
+
+services:
+  n8n:
+    ports:
+      - "5678:5678"
+
+  app:
+    profiles: [fullstack]
+    ports:
+      - "3000:3000"
+
+  nginx:
+    profiles: [fullstack]

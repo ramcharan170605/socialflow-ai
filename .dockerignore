@@ -1,0 +1,39 @@
+# Dependencies & build output
+node_modules
+.next
+out
+build
+dist
+
+# Git & IDE
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+*.md
+!README.md
+!docs/DOCKER_DEPLOY.md
+
+# Env & secrets (mount at runtime)
+.env
+.env.*
+!.env.docker.example
+!.env.example
+
+# Docker dev artifacts
+.push-*.json
+docker-compose.dev.yml
+
+# Tests & logs
+coverage
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional local data
+redis_data
+n8n_data

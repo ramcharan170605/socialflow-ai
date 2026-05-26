@@ -1,0 +1,56 @@
+# Render Blueprint — multi-service (alternative to single VPS docker-compose)
+# MongoDB Atlas remains external.
+#
+# Note: For true single-container docker-compose on one VM,
+# use docs/DOCKER_DEPLOY.md Option A instead.
+
+services:
+  - type: web
+    name: socialflow-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: N8N_WEBHOOK_URL
+        fromService:
+          name: socialflow-n8n
+          type: pserv
+          property: hostport
+
+  - type: pserv
+    name: socialflow-n8n
+    runtime: image
+    image:
+      url: docker.n8n.io/n8nio/n8n:1.70.1
+    plan: starter
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 1
+    envVars:
+      - key: N8N_ENCRYPTION_KEY
+        sync: false
+      - key: N8N_USER_MANAGEMENT_JWT_SECRET
+        sync: false
+      - key: N8N_HOST
+        value: 0.0.0.0
+      - key: N8N_PORT
+        value: "5678"
+      - key: DB_TYPE
+        value: sqlite

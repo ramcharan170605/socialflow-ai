@@ -1,0 +1,37 @@
+# Simplified Render Blueprint for first live test (web only)
+# Redis/worker optional — enable later when USE_QUEUE=true
+services:
+  - type: web
+    name: socialflow-ai
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: MONGODB_URI
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        value: /sign-in
+      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        value: /sign-up
+      - key: N8N_WEBHOOK_URL
+        sync: false
+      - key: N8N_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: DEFAULT_USER_CREDITS
+        value: "50"
+      - key: RATE_LIMIT_POINTS
+        value: "20"
+      - key: USE_QUEUE
+        value: "false"

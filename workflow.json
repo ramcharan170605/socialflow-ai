@@ -1,0 +1,208 @@
+{
+  "id": "f3a8b2c1-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
+  "name": "SocialFlow AI - Multi-Tenant Content API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "socialflow-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-800, 0],
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "webhookId": "socialflow-generate"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "u1", "name": "websiteUrl", "value": "={{ $json.body.websiteUrl || '' }}", "type": "string" },
+            { "id": "u2", "name": "scrapedContent", "value": "={{ $json.body.scrapedContent || '' }}", "type": "string" },
+            { "id": "u3", "name": "userPrompt", "value": "={{ $json.body.userPrompt || '' }}", "type": "string" },
+            { "id": "u4", "name": "optimizedPrompt", "value": "={{ $json.body.optimizedPrompt || '' }}", "type": "string" },
+            { "id": "u5", "name": "platform", "value": "={{ ($json.body.platform || 'linkedin').toLowerCase() }}", "type": "string" },
+            { "id": "u6", "name": "userId", "value": "={{ $json.body.userId }}", "type": "string" },
+            { "id": "u7", "name": "executionId", "value": "={{ $json.body.executionId }}", "type": "string" },
+            { "id": "u8", "name": "publish", "value": "={{ $json.body.publish === true }}", "type": "boolean" },
+            { "id": "u9", "name": "platformTokens", "value": "={{ $json.body.platformTokens || {} }}", "type": "object" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-560, 0],
+      "id": "normalize-input",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "responsesApiEnabled": false,
+        "builtInTools": {},
+        "options": { "temperature": 0.5 }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-320, 200],
+      "id": "llm-summarizer-model",
+      "name": "OpenAI Summarizer Model",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=System: Social media strategist.\n\nSummarize for social (max 250 words):\nURL: {{ $json.websiteUrl }}\nPrompt: {{ $json.userPrompt }}\n\nContent:\n{{ $json.scrapedContent }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [-320, 0],
+      "id": "article-summarizer",
+      "name": "Article Summarizer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const platform = $('Normalize Input').first().json.platform;\nconst specs = { linkedin: { name: 'LinkedIn', max: 300 }, facebook: { name: 'Facebook', max: 200 }, instagram: { name: 'Instagram', max: 150 }, threads: { name: 'Threads', max: 100 }, medium: { name: 'Medium', max: 500 }, devto: { name: 'Dev.to', max: 400 }, youtube: { name: 'YouTube Community', max: 280, hint: 'Community tab text/image post only. Never video uploads, Shorts, or studio publishing.' }, producthunt: { name: 'Product Hunt', max: 260 } };\nconst spec = specs[platform] || specs.linkedin;\nconst base = $('Normalize Input').first().json.optimizedPrompt || $('Normalize Input').first().json.userPrompt;\nconst systemExtra = spec.hint ? ` ${spec.hint}` : '';\nreturn [{ json: { platform, platformName: spec.name, systemPrompt: `Expert ${spec.name} creator.${systemExtra}`, userMessage: `${base}\\n\\nSummary:\\n{{ summary }}\\n\\nOutput ONLY paste-ready post text.` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 0],
+      "id": "platform-prompt",
+      "name": "Platform Prompt Builder"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "responsesApiEnabled": false,
+        "builtInTools": {},
+        "options": { "temperature": 0.7 }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [160, 200],
+      "id": "llm-generator-model",
+      "name": "OpenAI Generator Model",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Platform Prompt Builder').item.json.systemPrompt }}\n\n{{ $('Platform Prompt Builder').item.json.userMessage.replace('{{ summary }}', $json.text) }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [160, 0],
+      "id": "generate-post",
+      "name": "Generate Platform Post"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "publish-check",
+              "leftValue": "={{ $('Normalize Input').item.json.publish }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 0],
+      "id": "if-publish",
+      "name": "Should Publish?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Normalize Input').first().json;\nconst content = $('Generate Platform Post').first().json.text || '';\nconst summary = $('Article Summarizer').first().json.text || '';\nconst platform = input.platform;\nconst tokens = input.platformTokens || {};\nconst token = tokens[platform];\n\nlet publishResult = { success: false, skipped: true };\n\nif (input.publish && token?.accessToken && content) {\n  try {\n    if (platform === 'linkedin') {\n      const personRes = await this.helpers.httpRequest({ method: 'GET', url: 'https://api.linkedin.com/v2/userinfo', headers: { Authorization: `Bearer ${token.accessToken}` } });\n      const author = `urn:li:person:${personRes.sub}`;\n      await this.helpers.httpRequest({ method: 'POST', url: 'https://api.linkedin.com/v2/ugcPosts', headers: { Authorization: `Bearer ${token.accessToken}`, 'Content-Type': 'application/json', 'X-Restli-Protocol-Version': '2.0.0' }, body: { author, lifecycleState: 'PUBLISHED', specificContent: { 'com.linkedin.ugc.ShareContent': { shareCommentary: { text: content }, shareMediaCategory: 'NONE' } }, visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' } } });\n      publishResult = { success: true, platform: 'linkedin' };\n    } else if (platform === 'youtube') {\n      publishResult = { success: false, error: 'YouTube Community auto-publish is coming soon (text/image posts only — not video uploads).' };\n    } else {\n      publishResult = { success: false, error: `Auto-publish not yet implemented for ${platform}. Content generated successfully.` };\n    }\n  } catch (e) {\n    publishResult = { success: false, error: e.message };\n  }\n} else if (input.publish && !token) {\n  publishResult = { success: false, error: 'No token provided for platform' };\n}\n\nconst wordCount = content.split(/\\s+/).filter(Boolean).length;\nreturn [{ json: { success: true, executionId: input.executionId, userId: input.userId, platform, content, summary, wordCount, qualityScore: Math.min(100, wordCount * 2), publishResult, generatedAt: new Date().toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, -80],
+      "id": "publish-and-format",
+      "name": "Publish With Dynamic Token"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Normalize Input').first().json;\nconst content = $('Generate Platform Post').first().json.text || '';\nconst summary = $('Article Summarizer').first().json.text || '';\nconst wordCount = content.split(/\\s+/).filter(Boolean).length;\nreturn [{ json: { success: true, executionId: input.executionId, userId: input.userId, platform: input.platform, content, summary, wordCount, qualityScore: Math.min(100, wordCount * 2), publishResult: { success: false, skipped: true }, generatedAt: new Date().toISOString() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 120],
+      "id": "format-only",
+      "name": "Format Response Only"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseCode": 200 }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 0],
+      "id": "respond-webhook",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]] },
+    "Normalize Input": { "main": [[{ "node": "Article Summarizer", "type": "main", "index": 0 }]] },
+    "OpenAI Summarizer Model": { "ai_languageModel": [[{ "node": "Article Summarizer", "type": "ai_languageModel", "index": 0 }]] },
+    "Article Summarizer": { "main": [[{ "node": "Platform Prompt Builder", "type": "main", "index": 0 }]] },
+    "Platform Prompt Builder": { "main": [[{ "node": "Generate Platform Post", "type": "main", "index": 0 }]] },
+    "OpenAI Generator Model": { "ai_languageModel": [[{ "node": "Generate Platform Post", "type": "ai_languageModel", "index": 0 }]] },
+    "Generate Platform Post": { "main": [[{ "node": "Should Publish?", "type": "main", "index": 0 }]] },
+    "Should Publish?": {
+      "main": [
+        [{ "node": "Publish With Dynamic Token", "type": "main", "index": 0 }],
+        [{ "node": "Format Response Only", "type": "main", "index": 0 }]
+      ]
+    },
+    "Publish With Dynamic Token": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] },
+    "Format Response Only": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
