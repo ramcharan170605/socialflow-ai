@@ -21,8 +21,6 @@ const PLATFORM_GUIDES: Record<PlatformId, string> = {
     'Write an Instagram Business caption with a strong hook, emoji where natural, line breaks, and 10-15 hashtags in a separate block.',
   threads:
     'Write a casual Threads micro-post. Concise, conversational, 2-3 hashtags.',
-  medium:
-    'Write a Medium-style teaser: compelling headline, subtitle, and opening paragraphs that draw readers in.',
   devto:
     'Write a Dev.to post intro: developer-focused, accessible, with suggested tags at the end.',
   youtube:

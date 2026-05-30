@@ -62,16 +62,6 @@ export const PLATFORM_CATALOG: PlatformCatalogEntry[] = [
     maxChars: 100,
   },
   {
-    id: 'medium',
-    label: 'Medium',
-    icon: 'M',
-    connectable: true,
-    authMethod: 'api_key' as const,
-    publishStyle: 'long_form',
-    workflowName: 'Medium',
-    maxChars: 500,
-  },
-  {
     id: 'devto',
     label: 'Dev.to',
     icon: '{ }',
@@ -112,7 +102,6 @@ export type PlatformId =
   | 'facebook'
   | 'instagram'
   | 'threads'
-  | 'medium'
   | 'devto'
   | 'youtube'
   | 'producthunt';

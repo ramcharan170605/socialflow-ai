@@ -12,8 +12,6 @@ export async function fetchPlatformProfile(
     case 'instagram':
     case 'threads':
       return fetchMetaProfile(platform, accessToken);
-    case 'medium':
-      return fetchMediumProfile(accessToken);
     case 'devto':
       return fetchDevToProfile(accessToken);
     case 'youtube':
@@ -64,26 +62,6 @@ async function fetchMetaProfile(
     displayName: data.name,
     avatarUrl: data.picture?.data?.url,
     metadata: { platform },
-  };
-}
-
-async function fetchMediumProfile(
-  accessToken: string
-): Promise<PlatformProfile> {
-  const res = await fetch('https://api.medium.com/v1/me', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) {
-    return { platformUserId: hashKey(accessToken), displayName: 'Medium User' };
-  }
-  const data = (await res.json()) as {
-    data: { id: string; username: string; name: string; imageUrl?: string };
-  };
-  return {
-    platformUserId: data.data.id,
-    username: data.data.username,
-    displayName: data.data.name,
-    avatarUrl: data.data.imageUrl,
   };
 }
 

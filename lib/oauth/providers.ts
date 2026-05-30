@@ -43,12 +43,6 @@ export const OAUTH_PROVIDERS: Record<ConnectablePlatform, OAuthProviderConfig> =
     clientIdEnv: 'META_APP_ID',
     clientSecretEnv: 'META_APP_SECRET',
   },
-  medium: {
-    platform: 'medium',
-    authMethod: 'api_key',
-    clientIdEnv: 'MEDIUM_CLIENT_ID',
-    clientSecretEnv: 'MEDIUM_CLIENT_SECRET',
-  },
   devto: {
     platform: 'devto',
     authMethod: 'api_key',

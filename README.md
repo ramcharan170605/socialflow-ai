@@ -78,7 +78,6 @@ Single source of truth: [`lib/platforms/catalog.ts`](lib/platforms/catalog.ts)
 | Facebook Pages | ✅ | ✅ OAuth (Meta) |
 | Instagram Business | ✅ | ✅ OAuth (Meta) |
 | Threads | ✅ | ✅ OAuth (Meta) |
-| Medium | ✅ | ✅ API key |
 | Dev.to | ✅ | ✅ API key |
 | YouTube Community | ✅ | 🔜 Coming soon (text/image posts only) |
 | Product Hunt | ✅ | 🔜 Coming soon |
@@ -232,7 +231,7 @@ User signs in (Clerk)
 |----------|--------|------|-------------|
 | `/api/platforms/connect/:platform` | GET | Yes | Start OAuth redirect |
 | `/api/platforms/callback/:platform` | GET | No | OAuth callback |
-| `/api/platforms/connect/:platform/api-key` | POST | Yes | Dev.to / Medium API key |
+| `/api/platforms/connect/:platform/api-key` | POST | Yes | Dev.to API key |
 | `/api/platforms/accounts` | GET | Yes | List connections |
 | `/api/platforms/disconnect/:platform` | DELETE | Yes | Revoke & delete tokens |
 | `/api/workflow/trigger` | POST | Yes | Generate (+ optional publish) |

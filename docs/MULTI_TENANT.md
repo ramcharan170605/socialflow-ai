@@ -27,7 +27,7 @@ User → Clerk auth → API route
 |--------|------|-------------|
 | GET | `/api/platforms/connect/:platform` | Start OAuth redirect |
 | GET | `/api/platforms/callback/:platform` | OAuth callback (public) |
-| POST | `/api/platforms/connect/:platform/api-key` | Dev.to / Medium API key |
+| POST | `/api/platforms/connect/:platform/api-key` | Dev.to API key |
 | GET | `/api/platforms/accounts` | List user's connections |
 | DELETE | `/api/platforms/disconnect/:platform` | Revoke & delete tokens |
 | POST | `/api/workflow/trigger` | Generate (+ optional publish) |
