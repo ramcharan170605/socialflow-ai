@@ -35,3 +35,6 @@ next-env.d.ts
 # ide
 .idea
 .vscode
+
+# user uploads
+/data/uploads

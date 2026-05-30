@@ -6,6 +6,7 @@ interface ContentPreviewProps {
   qualityScore?: number;
   wordCount?: number;
   platform?: string;
+  mediaUrls?: string[];
   onCopy: () => void;
 }
 
@@ -15,6 +16,7 @@ export function ContentPreview({
   qualityScore,
   wordCount,
   platform,
+  mediaUrls,
   onCopy,
 }: ContentPreviewProps) {
   return (
@@ -66,6 +68,15 @@ export function ContentPreview({
             {summary}
           </p>
         </details>
+      )}
+
+      {mediaUrls && mediaUrls.length > 0 && (
+        <div className="composer-result-media" style={{ marginBottom: '1rem' }}>
+          {mediaUrls.map((url) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={url} src={url} alt="Attached" className="composer-result-media-img" />
+          ))}
+        </div>
       )}
 
       <pre

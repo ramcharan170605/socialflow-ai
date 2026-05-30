@@ -1,6 +1,7 @@
 import { sanitizeText } from './sanitize';
 import type { PlatformId } from './platforms';
 import type { PlatformTokenPayload } from './oauth/types';
+import type { MediaAsset } from './media/types';
 
 export interface N8nGeneratePayload {
   websiteUrl: string;
@@ -10,9 +11,9 @@ export interface N8nGeneratePayload {
   platform: PlatformId;
   userId: string;
   executionId: string;
-  /** Per-user tokens injected by backend — n8n uses these, NOT static credentials */
   platformTokens?: Record<string, PlatformTokenPayload>;
   publish?: boolean;
+  mediaAssets?: MediaAsset[];
 }
 
 export interface N8nPublishResult {
@@ -36,6 +37,7 @@ export interface N8nGenerateResponse {
   wordCount?: number;
   generatedAt?: string;
   publishResult?: N8nPublishResult;
+  mediaAssets?: MediaAsset[];
   error?: string;
 }
 
@@ -96,6 +98,14 @@ export async function triggerN8nWorkflow(
     executionId: payload.executionId,
     platformTokens: sanitizeTokensForN8n(payload.platformTokens),
     publish: payload.publish ?? false,
+    mediaAssets: (payload.mediaAssets ?? []).map((m) => ({
+      id: m.id,
+      filename: m.filename,
+      mimeType: m.mimeType,
+      size: m.size,
+      url: m.url,
+      internalUrl: m.internalUrl,
+    })),
   };
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

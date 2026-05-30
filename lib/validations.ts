@@ -1,22 +1,45 @@
 import { z } from 'zod';
 import { PLATFORMS } from './platforms';
-import { CONNECTABLE_PLATFORMS } from './platforms/catalog';
 
 const platformIds = PLATFORMS.map((p) => p.id) as [string, ...string[]];
 
-export const generateRequestSchema = z.object({
-  websiteUrl: z
-    .string()
-    .url('Please enter a valid URL')
-    .max(2048)
-    .refine((url) => /^https?:\/\//i.test(url), 'URL must use http or https'),
-  userPrompt: z
-    .string()
-    .min(10, 'Prompt must be at least 10 characters')
-    .max(4000, 'Prompt must be under 4000 characters'),
-  platform: z.enum(platformIds),
-  publish: z.boolean().optional().default(false),
-});
+/** JSON composer payload (backward compatible — images use multipart). */
+export const generateRequestSchema = z
+  .object({
+    websiteUrl: z.string().max(2048).optional().default(''),
+    userPrompt: z.string().max(4000).optional().default(''),
+    platform: z.enum(platformIds),
+    publish: z.boolean().optional().default(false),
+  })
+  .superRefine((data, ctx) => {
+    const url = data.websiteUrl?.trim() ?? '';
+    const prompt = data.userPrompt?.trim() ?? '';
+    if (!url && prompt.length < 10) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Enter a prompt (10+ characters) or a website URL.',
+        path: ['userPrompt'],
+      });
+    }
+    if (url) {
+      try {
+        const parsed = new URL(url);
+        if (!/^https?:$/i.test(parsed.protocol)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'URL must use http or https',
+            path: ['websiteUrl'],
+          });
+        }
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Please enter a valid URL',
+          path: ['websiteUrl'],
+        });
+      }
+    }
+  });
 
 export const workflowTriggerSchema = generateRequestSchema;
 

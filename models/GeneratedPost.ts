@@ -10,6 +10,12 @@ export interface IGeneratedPost {
   content: string;
   qualityScore?: number;
   wordCount?: number;
+  mediaAssets?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    mimeType: string;
+  }>;
   status: 'pending' | 'completed' | 'failed';
   error?: string;
   createdAt: Date;
@@ -20,13 +26,21 @@ const GeneratedPostSchema = new Schema<IGeneratedPost>(
   {
     userId: { type: String, required: true, index: true },
     executionId: { type: String, required: true, unique: true },
-    websiteUrl: { type: String, required: true },
-    userPrompt: { type: String, required: true },
+    websiteUrl: { type: String, default: '' },
+    userPrompt: { type: String, default: '' },
     platform: { type: String, required: true, index: true },
     summary: String,
     content: { type: String, default: '' },
     qualityScore: Number,
     wordCount: Number,
+    mediaAssets: [
+      {
+        id: String,
+        url: String,
+        filename: String,
+        mimeType: String,
+      },
+    ],
     status: {
       type: String,
       enum: ['pending', 'completed', 'failed'],

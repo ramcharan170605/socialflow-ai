@@ -5,7 +5,7 @@ const nextConfig = {
     instrumentationHook: true,
     serverComponentsExternalPackages: ['mongoose', 'mongodb'],
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '22mb',
     },
   },
 };

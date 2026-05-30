@@ -52,9 +52,12 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      # Internal n8n webhook (never exposed to browser)
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/socialflow-generate}
       N8N_WAIT_URL: ${N8N_WAIT_URL:-http://n8n:5678/healthz}
+      MEDIA_INTERNAL_BASE_URL: ${MEDIA_INTERNAL_BASE_URL:-http://app:3000}
+      MEDIA_UPLOAD_DIR: /app/data/uploads
+    volumes:
+      - uploads_data:/app/data/uploads
     depends_on:
       n8n:
         condition: service_healthy
@@ -157,3 +160,5 @@ volumes:
     name: socialflow_n8n_data
   redis_data:
     name: socialflow_redis_data
+  uploads_data:
+    name: socialflow_uploads_data
