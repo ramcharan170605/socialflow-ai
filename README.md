@@ -311,6 +311,7 @@ New users receive `DEFAULT_USER_CREDITS` (default: **50**). Each generation cost
 | Doc | Description |
 |-----|-------------|
 | [docs/MULTI_TENANT.md](docs/MULTI_TENANT.md) | OAuth architecture, data flow, security |
+| [docs/ORACLE_CLOUD_VPS.md](docs/ORACLE_CLOUD_VPS.md) | Oracle Cloud VPS deploy (SSH, Docker, ports) |
 | [docs/DOCKER_DEPLOY.md](docs/DOCKER_DEPLOY.md) | Docker checklist, n8n import, production |
 | [DEPLOY-RENDER.md](DEPLOY-RENDER.md) | Render deployment guide |
 

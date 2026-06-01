@@ -141,6 +141,8 @@ Render **standard Web Services run one container**. For the full docker-compose 
 
 ### Option A — VPS (recommended for full stack)
 
+See **[docs/ORACLE_CLOUD_VPS.md](./ORACLE_CLOUD_VPS.md)** for Oracle Cloud (OCI) step-by-step, including SSH login.
+
 1. Provision Ubuntu 22.04 VM (2GB+ RAM)
 2. Install Docker + Compose
 3. Clone repo, configure `.env`, run `docker compose up -d --build`
