@@ -81,14 +81,14 @@ services:
   # Pinned to official stable: https://docs.n8n.io/hosting/installation/docker/
   # ---------------------------------------------------------------------------
   n8n:
-    image: docker.n8n.io/n8nio/n8n:2.21.7
+    image: docker.n8n.io/n8nio/n8n:2.22.6
     restart: unless-stopped
     networks:
       - socialflow_net
     expose:
       - "5678"
     # Localhost-only publish for SSH tunnel admin (NOT reachable from the public internet).
-    # On your PC: ssh -L 5678:127.0.0.1:5678 ubuntu@<vps-ip>
+    # On your PC: ssh -o ExitOnForwardFailure=yes -N -L 127.0.0.1:5678:127.0.0.1:5678 ubuntu@<vps-ip>
     ports:
       - "127.0.0.1:5678:5678"
     environment:

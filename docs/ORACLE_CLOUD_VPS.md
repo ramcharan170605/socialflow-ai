@@ -177,11 +177,30 @@ https://charansurebrec.qzz.io/api/platforms/callback/{platform}
 
 **n8n admin via SSH tunnel (Windows PowerShell):**
 
+Dedicated tunnel (recommended — fails loudly if port 5678 is busy):
+
 ```powershell
-ssh -i "C:\Users\ramch\Downloads\ssh-key-2026-06-01.key" -L 5678:127.0.0.1:5678 ubuntu@129.159.237.65
+ssh -i "C:\Users\ramch\Downloads\ssh-key-2026-06-01.key" -o ExitOnForwardFailure=yes -N -L 127.0.0.1:5678:127.0.0.1:5678 ubuntu@129.159.237.65
 ```
 
-Then open **http://localhost:5678** in your browser (leave the SSH session open).
+Interactive SSH + tunnel (keep this window open):
+
+```powershell
+ssh -i "C:\Users\ramch\Downloads\ssh-key-2026-06-01.key" -o ExitOnForwardFailure=yes -L 127.0.0.1:5678:127.0.0.1:5678 ubuntu@129.159.237.65
+```
+
+Then open **http://127.0.0.1:5678** (not only `localhost` if IPv6 causes issues).  
+If local port 5678 is taken, use `-L 127.0.0.1:15678:127.0.0.1:5678` and browse **http://127.0.0.1:15678**.
+
+**Cursor n8n MCP (with SSH tunnel active):** set MCP URL to `http://127.0.0.1:5678/mcp-server/http` and your n8n MCP access token in Cursor MCP settings (see `.cursor/mcp.json.example`).
+
+While SSH is connected, verify the forward in a **second** PowerShell window:
+
+```powershell
+netstat -ano | findstr ":5678"
+```
+
+You should see `LISTENING` on `127.0.0.1:5678` owned by `ssh.exe`. If nothing is listening, the tunnel did not bind (usually a local port conflict).
 
 ---
 
@@ -193,6 +212,7 @@ Then open **http://localhost:5678** in your browser (leave the SSH session open)
 | `Connection timed out` | OCI security list missing port 22; wrong public IP |
 | `WARNING: UNPROTECTED PRIVATE KEY FILE` | Run `icacls` commands in §1.2 |
 | `Host key verification failed` | `ssh-keygen -R 129.159.237.65` then reconnect |
+| `ERR_CONNECTION_REFUSED` on `localhost:5678` | SSH login works but **port forward did not bind** — add `-o ExitOnForwardFailure=yes`, use explicit `-L 127.0.0.1:5678:127.0.0.1:5678`, check `netstat` for `ssh.exe` on 5678, free the port or use 15678 locally |
 
 ---
 
