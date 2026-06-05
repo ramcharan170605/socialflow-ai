@@ -253,7 +253,8 @@ Copy [`.env.example`](.env.example) for local dev or [`.env.docker.example`](.en
 | `FIRECRAWL_API_KEY` | Yes | Firecrawl API key |
 | `N8N_WEBHOOK_URL` | Yes | Internal n8n production webhook |
 | `LINKEDIN_CLIENT_ID` / `SECRET` | For LinkedIn OAuth | |
-| `META_APP_ID` / `SECRET` | For Meta platforms | Facebook, Instagram, Threads |
+| `META_APP_ID` / `SECRET` | For Meta platforms | Facebook Pages, Instagram Business |
+| `THREADS_APP_ID` / `SECRET` | For Threads | Separate Threads app (not shared with Meta app) |
 | `YOUTUBE_CLIENT_ID` / `SECRET` | Placeholder | Community posts (coming soon) |
 | `PRODUCTHUNT_CLIENT_ID` / `SECRET` | Placeholder | Coming soon |
 | `REDIS_URL` | No | Cache + optional job queue |

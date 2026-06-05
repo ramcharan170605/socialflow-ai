@@ -4,6 +4,7 @@ import { ConnectedAccount } from '@/models/ConnectedAccount';
 import { OAuthToken } from '@/models/OAuthToken';
 import type { ConnectablePlatform, PlatformTokenPayload } from './types';
 import { getProvider, getClientCredentials } from './providers';
+import { refreshThreadsAccessToken } from './threads';
 import type { OAuthTokenResponse } from './types';
 
 const REFRESH_BUFFER_MS = 5 * 60 * 1000;
@@ -48,56 +49,71 @@ export async function saveTokens(params: {
   );
 }
 
+function threadsUsesAccessTokenRefresh(platform: ConnectablePlatform): boolean {
+  return platform === 'threads';
+}
+
 export async function refreshAccessToken(
   userId: string,
   platform: ConnectablePlatform
 ): Promise<PlatformTokenPayload> {
   await connectDB();
   const tokenDoc = await OAuthToken.findOne({ userId, platform });
-  if (!tokenDoc?.refreshTokenEncrypted) {
+  if (!tokenDoc) {
+    await markAccountExpired(userId, platform);
+    throw new TokenExpiredError(platform);
+  }
+
+  const isThreads = threadsUsesAccessTokenRefresh(platform);
+  if (!isThreads && !tokenDoc.refreshTokenEncrypted) {
     await markAccountExpired(userId, platform);
     throw new TokenExpiredError(platform);
   }
 
   const provider = getProvider(platform);
-  if (!provider?.tokenUrl) throw new TokenExpiredError(platform);
+  if (!provider?.tokenUrl && !isThreads) throw new TokenExpiredError(platform);
 
-  const creds = getClientCredentials(provider);
-  if (!creds) throw new Error(`OAuth not configured for ${platform}`);
+  let data: OAuthTokenResponse;
+  let priorRefreshToken: string | undefined;
 
-  const refreshToken = decryptSecret(tokenDoc.refreshTokenEncrypted);
-  const body = new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-    client_id: creds.clientId,
-    client_secret: creds.clientSecret,
-  });
+  if (isThreads) {
+    const accessToken = decryptSecret(tokenDoc.accessTokenEncrypted);
+    data = await refreshThreadsAccessToken(accessToken);
+  } else {
+    const creds = getClientCredentials(provider!);
+    if (!creds) throw new Error(`OAuth not configured for ${platform}`);
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  };
+    priorRefreshToken = decryptSecret(tokenDoc.refreshTokenEncrypted!);
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: priorRefreshToken,
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+    });
 
-  const res = await fetch(provider.tokenUrl, {
-    method: 'POST',
-    headers,
-    body: body.toString(),
-  });
+    const res = await fetch(provider!.tokenUrl!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
 
-  if (!res.ok) {
-    await markAccountExpired(userId, platform);
-    throw new TokenExpiredError(platform);
+    if (!res.ok) {
+      await markAccountExpired(userId, platform);
+      throw new TokenExpiredError(platform);
+    }
+
+    data = (await res.json()) as OAuthTokenResponse;
   }
 
-  const data = (await res.json()) as OAuthTokenResponse;
   await saveTokens({
     userId,
     platform,
     connectedAccountId: String(tokenDoc.connectedAccountId),
     accessToken: data.access_token,
-    refreshToken: data.refresh_token ?? refreshToken,
+    refreshToken: isThreads ? undefined : data.refresh_token ?? priorRefreshToken,
     expiresIn: data.expires_in,
     tokenType: data.token_type,
-    scope: data.scope,
+    scope: data.scope ?? tokenDoc.scope,
   });
 
   await ConnectedAccount.findOneAndUpdate(
@@ -128,11 +144,15 @@ export async function getValidPlatformToken(
   const tokenDoc = await OAuthToken.findOne({ userId, platform });
   if (!tokenDoc) return null;
 
+  const canRefresh =
+    threadsUsesAccessTokenRefresh(platform) ||
+    !!tokenDoc.refreshTokenEncrypted;
+
   const needsRefresh =
     tokenDoc.expiresAt &&
     tokenDoc.expiresAt.getTime() - Date.now() < REFRESH_BUFFER_MS;
 
-  if (needsRefresh && tokenDoc.refreshTokenEncrypted) {
+  if (needsRefresh && canRefresh) {
     try {
       return await refreshAccessToken(userId, platform);
     } catch {
@@ -144,7 +164,7 @@ export async function getValidPlatformToken(
     tokenDoc.expiresAt &&
     tokenDoc.expiresAt.getTime() < Date.now()
   ) {
-    if (tokenDoc.refreshTokenEncrypted) {
+    if (canRefresh) {
       try {
         return await refreshAccessToken(userId, platform);
       } catch {

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import type { ConnectablePlatform, PlatformProfile } from './types';
+import { fetchThreadsProfile } from './threads';
 
 export async function fetchPlatformProfile(
   platform: ConnectablePlatform,
@@ -10,8 +11,9 @@ export async function fetchPlatformProfile(
       return fetchLinkedInProfile(accessToken);
     case 'facebook':
     case 'instagram':
-    case 'threads':
       return fetchMetaProfile(platform, accessToken);
+    case 'threads':
+      return fetchThreadsProfile(accessToken);
     case 'devto':
       return fetchDevToProfile(accessToken);
     case 'youtube':

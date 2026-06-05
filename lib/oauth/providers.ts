@@ -40,8 +40,8 @@ export const OAUTH_PROVIDERS: Record<ConnectablePlatform, OAuthProviderConfig> =
     authUrl: 'https://threads.net/oauth/authorize',
     tokenUrl: 'https://graph.threads.net/oauth/access_token',
     scopes: ['threads_basic', 'threads_content_publish'],
-    clientIdEnv: 'META_APP_ID',
-    clientSecretEnv: 'META_APP_SECRET',
+    clientIdEnv: 'THREADS_APP_ID',
+    clientSecretEnv: 'THREADS_APP_SECRET',
   },
   devto: {
     platform: 'devto',

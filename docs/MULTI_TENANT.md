@@ -56,6 +56,8 @@ Register redirect URIs for each platform:
 
 See `.env.example` for required client IDs/secrets.
 
+**Meta vs Threads:** Facebook Pages and Instagram Business share `META_APP_ID` / `META_APP_SECRET` (Facebook Login + Graph API). Threads uses a **separate** Threads app with `THREADS_APP_ID` / `THREADS_APP_SECRET`, dedicated OAuth endpoints, and long-lived token refresh via `th_exchange_token` / `th_refresh_token` (handled in `lib/oauth/threads.ts`).
+
 ### YouTube (Community posts only)
 
 YouTube integration is scoped to **Community tab** social posts (text, optional image) — the same lightweight model as LinkedIn or Threads. It does **not** include:

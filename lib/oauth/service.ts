@@ -11,6 +11,10 @@ import {
 import { generateState, generateCodeVerifier, generateCodeChallenge } from './pkce';
 import { saveTokens, revokeTokens } from './token-manager';
 import { fetchPlatformProfile } from './profiles';
+import {
+  exchangeThreadsAuthorizationCode,
+  exchangeThreadsLongLivedToken,
+} from './threads';
 import type { ConnectablePlatform, OAuthTokenResponse } from './types';
 
 export async function createOAuthAuthorizationUrl(
@@ -86,34 +90,46 @@ export async function handleOAuthCallback(
     throw new Error('OAuth provider not configured');
   }
 
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: getCallbackUrl(platform),
-    client_id: creds.clientId,
-    client_secret: creds.clientSecret,
-  });
+  let tokenData: OAuthTokenResponse;
 
-  if (stateDoc.codeVerifier) {
-    body.set('code_verifier', stateDoc.codeVerifier);
+  if (platform === 'threads') {
+    const redirectUri = getCallbackUrl(platform);
+    const shortLived = await exchangeThreadsAuthorizationCode({
+      code,
+      redirectUri,
+      clientId: creds.clientId,
+      clientSecret: creds.clientSecret,
+    });
+    tokenData = await exchangeThreadsLongLivedToken(
+      shortLived.access_token,
+      creds.clientSecret
+    );
+  } else {
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: getCallbackUrl(platform),
+      client_id: creds.clientId,
+      client_secret: creds.clientSecret,
+    });
+
+    if (stateDoc.codeVerifier) {
+      body.set('code_verifier', stateDoc.codeVerifier);
+    }
+
+    const tokenRes = await fetch(provider.tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      throw new Error(`Token exchange failed: ${errText.slice(0, 300)}`);
+    }
+
+    tokenData = (await tokenRes.json()) as OAuthTokenResponse;
   }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  };
-
-  const tokenRes = await fetch(provider.tokenUrl, {
-    method: 'POST',
-    headers,
-    body: body.toString(),
-  });
-
-  if (!tokenRes.ok) {
-    const errText = await tokenRes.text();
-    throw new Error(`Token exchange failed: ${errText.slice(0, 300)}`);
-  }
-
-  const tokenData = (await tokenRes.json()) as OAuthTokenResponse;
   const profile = await fetchPlatformProfile(platform, tokenData.access_token);
 
   const account = await ConnectedAccount.findOneAndUpdate(
