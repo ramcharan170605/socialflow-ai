@@ -7,7 +7,8 @@ Single-server stack for ~100 users: **nginx** (public) → **Next.js app** (API 
   Internet :80      │  nginx (only public port)            │
        ────────────►│    /      → app:3000 (Next.js)       │
                     │    /api/* → app:3000                 │
-                    │  (optional /n8n → n8n:5678)          │
+                    │    /webhook/* → n8n:5678             │
+                    │    /form/* → n8n:5678                │
                     └──────────┬──────────────────────────┘
                                │
               ┌────────────────┼────────────────┐
@@ -59,19 +60,28 @@ docker compose down
 
 Open: **http://localhost** (nginx → app)
 
-### 4. Optional: n8n admin UI at `/n8n`
+### 4. n8n public triggers and private editor
 
-```bash
-# In .env:
-NGINX_CONF=./nginx/nginx.with-n8n-admin.conf
-N8N_EDITOR_BASE_URL=http://localhost/n8n
+nginx exposes only n8n trigger endpoints:
 
-docker compose up -d --build
+```text
+/webhook/*
+/webhook-test/*
+/webhook-waiting/*
+/form/*
+/form-test/*
 ```
 
-Access editor: http://localhost/n8n (create owner account on first visit)
+These wildcard paths support all current and future workflows without adding
+per-workflow nginx configuration. Set:
 
-> For production, protect `/n8n` with VPN, IP allowlist, or basic auth — do not leave it public.
+```env
+N8N_PUBLIC_WEBHOOK_BASE=https://your-domain.com
+N8N_EDITOR_BASE_URL=http://localhost:5678
+```
+
+The n8n editor, REST API, assets, and MCP endpoint are not proxied by nginx.
+Access the editor through the loopback host port using an SSH tunnel.
 
 ---
 
@@ -103,17 +113,20 @@ npm run dev
 |---------|---------|-------------|
 | nginx | `socialflow_net` | **80** (configurable `HTTP_PORT`) |
 | app | `socialflow_net` | none (internal) |
-| n8n | `socialflow_net` | none (internal) |
+| n8n | `socialflow_net` | `127.0.0.1:5678` (SSH tunnel only) |
 | MongoDB | external | Atlas |
 
 **Critical:** Set in `.env`:
 
 ```env
 N8N_WEBHOOK_URL=http://n8n:5678/webhook/socialflow-generate
+N8N_PUBLIC_WEBHOOK_BASE=https://your-production-domain.com
+N8N_EDITOR_BASE_URL=http://localhost:5678
 NEXT_PUBLIC_APP_URL=https://your-production-domain.com
 ```
 
-The browser never sees `N8N_WEBHOOK_URL` — only the backend uses it inside Docker.
+`N8N_WEBHOOK_URL` remains internal and is used by the SocialFlow backend.
+`N8N_PUBLIC_WEBHOOK_BASE` controls URLs displayed by n8n for external callers.
 
 ---
 
@@ -176,6 +189,8 @@ Deploy **only** the app; use **n8n Cloud** or self-hosted n8n elsewhere:
 - [ ] `N8N_ENCRYPTION_KEY` and `N8N_USER_MANAGEMENT_JWT_SECRET` set
 - [ ] `NEXT_PUBLIC_APP_URL` = production HTTPS URL
 - [ ] `N8N_WEBHOOK_URL=http://n8n:5678/webhook/socialflow-generate` (Docker internal)
+- [ ] `N8N_PUBLIC_WEBHOOK_BASE=https://your-domain.com` (public trigger base)
+- [ ] `N8N_EDITOR_BASE_URL=http://localhost:5678` (SSH tunnel editor)
 
 ### Clerk
 
@@ -191,7 +206,7 @@ Deploy **only** the app; use **n8n Cloud** or self-hosted n8n elsewhere:
 
 ### n8n setup
 
-- [ ] Open n8n UI (internal port 5678 or `/n8n` if admin profile enabled)
+- [ ] Open n8n UI through an SSH tunnel to host loopback port 5678
 - [ ] Create owner account
 - [ ] **Import** `workflow.json` (Workflows → Import from File)
 - [ ] Create an **OpenAI API** credential named `OpenAI account` (or re-select your credential on both model nodes after import)
@@ -199,6 +214,8 @@ Deploy **only** the app; use **n8n Cloud** or self-hosted n8n elsewhere:
 - [ ] **Activate** workflow
 - [ ] Copy production webhook path: `socialflow-generate`
 - [ ] Verify webhook: `docker compose exec app wget -qO- http://n8n:5678/healthz`
+- [ ] Verify a production trigger through `https://your-domain.com/webhook/<path>`
+- [ ] Confirm `https://your-domain.com/n8n/` does not expose the editor
 
 ### OAuth platforms
 
@@ -260,7 +277,7 @@ https://your-domain.com/api/platforms/callback/producthunt
 | `Dockerfile.worker` | Optional BullMQ worker |
 | `docker-compose.yml` | Full MVP stack |
 | `docker-compose.dev.yml` | Dev overrides |
-| `nginx/nginx.conf` | Public proxy (app only) |
-| `nginx/nginx.with-n8n-admin.conf` | Proxy with `/n8n` admin |
+| `nginx/nginx.conf` | Public app plus n8n trigger-only proxy |
+| `nginx/includes/n8n-webhook-proxy.conf` | Shared trigger proxy headers/timeouts |
 | `.env.docker.example` | Environment template |
 | `scripts/docker-entrypoint.sh` | Wait for n8n before app start |

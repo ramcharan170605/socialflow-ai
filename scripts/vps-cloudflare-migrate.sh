@@ -27,6 +27,8 @@ def setv(k, v):
     line = f"{k}={v}"
     text = pat.sub(line, text) if pat.search(text) else text + ("\n" if text.endswith("\n") else "\n") + line + "\n"
 setv("NEXT_PUBLIC_APP_URL", "https://charansurebrec.qzz.io")
+setv("N8N_PUBLIC_WEBHOOK_BASE", "https://charansurebrec.qzz.io")
+setv("N8N_EDITOR_BASE_URL", "http://localhost:5678")
 setv("HTTP_PORT", "80")
 setv("MEDIA_INTERNAL_BASE_URL", "http://app:3000")
 p.write_text(text, encoding="utf-8")

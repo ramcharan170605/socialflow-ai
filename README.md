@@ -252,6 +252,8 @@ Copy [`.env.example`](.env.example) for local dev or [`.env.docker.example`](.en
 | `TOKEN_ENCRYPTION_KEY` | Yes | AES-256-GCM key for OAuth tokens |
 | `FIRECRAWL_API_KEY` | Yes | Firecrawl API key |
 | `N8N_WEBHOOK_URL` | Yes | Internal n8n production webhook |
+| `N8N_PUBLIC_WEBHOOK_BASE` | Docker/VPS | Public HTTPS origin used for all n8n trigger URLs |
+| `N8N_EDITOR_BASE_URL` | Docker/VPS | Private editor URL reached through the SSH tunnel |
 | `LINKEDIN_CLIENT_ID` / `SECRET` | For LinkedIn OAuth | |
 | `META_APP_ID` / `SECRET` | For Meta platforms | Facebook Pages, Instagram Business |
 | `THREADS_APP_ID` / `SECRET` | For Threads | Separate Threads app (not shared with Meta app) |

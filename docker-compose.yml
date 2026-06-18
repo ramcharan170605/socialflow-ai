@@ -5,8 +5,8 @@
 #   cp .env.docker.example .env
 #   docker compose up -d --build
 #
-# With n8n admin UI at /n8n:
-#   docker compose --profile n8n-admin up -d --build
+# n8n webhook/form triggers are public through nginx.
+# The n8n editor remains private on VPS loopback port 5678 for SSH tunneling.
 
 name: socialflow_saas
 
@@ -20,8 +20,8 @@ services:
       - "${HTTP_PORT:-80}:80"
       - "443:443"
     volumes:
-      # Default: public app only. For n8n UI at /n8n set NGINX_CONF=./nginx/nginx.with-n8n-admin.conf
-      - ${NGINX_CONF:-./nginx/nginx.conf}:/etc/nginx/nginx.conf:ro
+      # Public app plus explicit n8n webhook/form trigger routes.
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/includes:/etc/nginx/includes:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
@@ -96,9 +96,11 @@ services:
       N8N_HOST: 0.0.0.0
       N8N_PORT: 5678
       N8N_PROTOCOL: http
-      # Used when generating webhook URLs inside n8n (internal calls use service name)
-      WEBHOOK_URL: ${N8N_PUBLIC_WEBHOOK_BASE:-http://n8n:5678}
+      # Public URLs shown by n8n for every workflow trigger. Internal SocialFlow
+      # calls continue to use N8N_WEBHOOK_URL=http://n8n:5678/...
+      WEBHOOK_URL: ${N8N_PUBLIC_WEBHOOK_BASE:-http://localhost}
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:5678}
+      N8N_PROXY_HOPS: "1"
       GENERIC_TIMEZONE: ${TZ:-UTC}
       TZ: ${TZ:-UTC}
       N8N_DIAGNOSTICS_ENABLED: "false"
