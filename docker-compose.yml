@@ -81,7 +81,7 @@ services:
   # Pinned to official stable: https://docs.n8n.io/hosting/installation/docker/
   # ---------------------------------------------------------------------------
   n8n:
-    image: docker.n8n.io/n8nio/n8n:2.22.6
+    image: docker.n8n.io/n8nio/n8n:2.26.8
     restart: unless-stopped
     networks:
       - socialflow_net
