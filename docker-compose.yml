@@ -23,6 +23,7 @@ services:
       # Public app plus explicit n8n webhook/form trigger routes.
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/includes:/etc/nginx/includes:ro
+      - ./nginx/auth:/etc/nginx/auth:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       app:
