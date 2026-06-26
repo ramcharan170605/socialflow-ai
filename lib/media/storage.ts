@@ -1,4 +1,5 @@
 import { mkdir, writeFile, readFile, access } from 'fs/promises';
+import { createHmac, timingSafeEqual } from 'crypto';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UPLOAD_ROOT } from './constants';
@@ -33,13 +34,50 @@ function internalBaseUrl(): string {
   );
 }
 
+function mediaSigningSecret(): string | undefined {
+  return (
+    process.env.MEDIA_URL_SIGNING_SECRET ??
+    process.env.N8N_API_KEY ??
+    process.env.NEXTAUTH_SECRET ??
+    process.env.CLERK_SECRET_KEY
+  );
+}
+
+function mediaAccessToken(userId: string, mediaId: string): string | undefined {
+  const secret = mediaSigningSecret();
+  if (!secret) return undefined;
+
+  return createHmac('sha256', secret)
+    .update(`${userId}:${mediaId}`)
+    .digest('base64url');
+}
+
+export function verifyMediaAccessToken(
+  userId: string,
+  mediaId: string,
+  token: string | null
+): boolean {
+  const expected = mediaAccessToken(userId, mediaId);
+  if (!expected || !token) return false;
+
+  const expectedBuffer = Buffer.from(expected);
+  const tokenBuffer = Buffer.from(token);
+  return (
+    expectedBuffer.length === tokenBuffer.length &&
+    timingSafeEqual(expectedBuffer, tokenBuffer)
+  );
+}
+
 export function buildMediaUrls(userId: string, mediaId: string): {
   url: string;
   internalUrl: string;
 } {
   const segment = `/api/media/${userId}/${mediaId}`;
+  const token = mediaAccessToken(userId, mediaId);
+  const publicUrl = `${publicBaseUrl()}${segment}`;
+
   return {
-    url: `${publicBaseUrl()}${segment}`,
+    url: token ? `${publicUrl}?token=${token}` : publicUrl,
     internalUrl: `${internalBaseUrl()}${segment}`,
   };
 }
