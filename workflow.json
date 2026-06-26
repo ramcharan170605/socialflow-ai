@@ -43,26 +43,14 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
-        },
-        "responsesApiEnabled": false,
-        "builtInTools": {},
-        "options": { "temperature": 0.5 }
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
       "position": [-320, 200],
       "id": "llm-summarizer-model",
-      "name": "OpenAI Summarizer Model",
-      "credentials": {
-        "openAiApi": {
-          "name": "OpenAI account"
-        }
-      }
+      "name": "Groq Chat Model"
     },
     {
       "parameters": {
@@ -78,7 +66,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const platform = $('Normalize Input').first().json.platform;\nconst media = $('Normalize Input').first().json.mediaAssets || [];\nconst specs = { linkedin: { name: 'LinkedIn', max: 300 }, facebook: { name: 'Facebook', max: 200 }, instagram: { name: 'Instagram', max: 150 }, threads: { name: 'Threads', max: 100 }, devto: { name: 'Dev.to', max: 1200, hint: 'Write a concise DEV article in Markdown with a clear title, short intro, useful sections, and a practical takeaway.' }, youtube: { name: 'YouTube Community', max: 280, hint: 'Community tab text/image post only. Never video uploads, Shorts, or studio publishing.' }, producthunt: { name: 'Product Hunt', max: 260 } };\nconst spec = specs[platform] || specs.linkedin;\nconst base = $('Normalize Input').first().json.optimizedPrompt || $('Normalize Input').first().json.userPrompt;\nconst systemExtra = spec.hint ? ` ${spec.hint}` : '';\nconst mediaNote = media.length ? ` User attached ${media.length} image(s) — write caption/copy that complements the visual.` : '';\nreturn [{ json: { platform, platformName: spec.name, systemPrompt: `Expert ${spec.name} creator.${systemExtra}${mediaNote}`, userMessage: `${base}\\n\\nOutput ONLY paste-ready ${platform === 'devto' ? 'Markdown article content' : 'post text'}.` } }];"
+        "jsCode": "const platform = $('Normalize Input').first().json.platform;\nconst media = $('Normalize Input').first().json.mediaAssets || [];\nconst specs = { linkedin: { name: 'LinkedIn', max: 300 }, facebook: { name: 'Facebook', max: 200 }, instagram: { name: 'Instagram', max: 150 }, threads: { name: 'Threads', max: 100 }, devto: { name: 'Dev.to', max: 1200, hint: 'Write a concise DEV article in Markdown with a clear title, short intro, useful sections, and a practical takeaway.' }, youtube: { name: 'YouTube Community', max: 280, hint: 'Community tab text only. Never video uploads, Shorts, or studio publishing.' }, producthunt: { name: 'Product Hunt', max: 260 } };\nconst spec = specs[platform] || specs.linkedin;\nconst base = $('Normalize Input').first().json.optimizedPrompt || $('Normalize Input').first().json.userPrompt;\nconst systemExtra = spec.hint ? ` ${spec.hint}` : '';\nconst mediaNote = media.length ? ` User attached ${media.length} image(s); write caption/copy that complements the visual.` : '';\nreturn [{ json: { platform, platformName: spec.name, systemPrompt: `Expert ${spec.name} creator.${systemExtra}${mediaNote}`, userMessage: `${base}\\n\\nOutput ONLY paste-ready ${platform === 'devto' ? 'Markdown article content' : 'post text'}.` } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -88,26 +76,14 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
-        },
-        "responsesApiEnabled": false,
-        "builtInTools": {},
-        "options": { "temperature": 0.7 }
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
       "position": [160, 200],
       "id": "llm-generator-model",
-      "name": "OpenAI Generator Model",
-      "credentials": {
-        "openAiApi": {
-          "name": "OpenAI account"
-        }
-      }
+      "name": "Groq Chat Model1"
     },
     {
       "parameters": {
@@ -184,10 +160,10 @@
   "connections": {
     "Webhook Trigger": { "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]] },
     "Normalize Input": { "main": [[{ "node": "Article Summarizer", "type": "main", "index": 0 }]] },
-    "OpenAI Summarizer Model": { "ai_languageModel": [[{ "node": "Article Summarizer", "type": "ai_languageModel", "index": 0 }]] },
+    "Groq Chat Model": { "ai_languageModel": [[{ "node": "Article Summarizer", "type": "ai_languageModel", "index": 0 }]] },
     "Article Summarizer": { "main": [[{ "node": "Platform Prompt Builder", "type": "main", "index": 0 }]] },
     "Platform Prompt Builder": { "main": [[{ "node": "Generate Platform Post", "type": "main", "index": 0 }]] },
-    "OpenAI Generator Model": { "ai_languageModel": [[{ "node": "Generate Platform Post", "type": "ai_languageModel", "index": 0 }]] },
+    "Groq Chat Model1": { "ai_languageModel": [[{ "node": "Generate Platform Post", "type": "ai_languageModel", "index": 0 }]] },
     "Generate Platform Post": { "main": [[{ "node": "Should Publish?", "type": "main", "index": 0 }]] },
     "Should Publish?": {
       "main": [

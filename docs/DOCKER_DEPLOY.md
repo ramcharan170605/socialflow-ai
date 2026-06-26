@@ -209,8 +209,8 @@ Deploy **only** the app; use **n8n Cloud** or self-hosted n8n elsewhere:
 - [ ] Open n8n UI through an SSH tunnel to host loopback port 5678
 - [ ] Create owner account
 - [ ] **Import** `workflow.json` (Workflows → Import from File)
-- [ ] Create an **OpenAI API** credential named `OpenAI account` (or re-select your credential on both model nodes after import)
-- [ ] Confirm both **OpenAI Chat Model** sub-nodes use **Chat Completions** (`responsesApiEnabled` off) — required for Basic LLM Chain nodes
+- [ ] Create a **Groq API** credential and select it on both **Groq Chat Model** nodes after import
+- [ ] Confirm both **Groq Chat Model** sub-nodes use `llama-3.3-70b-versatile`
 - [ ] **Activate** workflow
 - [ ] Copy production webhook path: `socialflow-generate`
 - [ ] Verify webhook: `docker compose exec app wget -qO- http://n8n:5678/healthz`
