@@ -69,7 +69,7 @@ export const PLATFORM_CATALOG: PlatformCatalogEntry[] = [
     authMethod: 'api_key' as const,
     publishStyle: 'long_form',
     workflowName: 'Dev.to',
-    maxChars: 400,
+    maxChars: 1200,
   },
   {
     id: 'youtube',
