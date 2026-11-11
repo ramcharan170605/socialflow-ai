@@ -25,16 +25,10 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
   const safeUrl = sanitizeUrl(url);
   const fc = getClient();
 
-  const result = await fc.scrapeUrl(safeUrl, {
+  const result = await fc.scrape(safeUrl, {
     formats: ['markdown'],
     onlyMainContent: true,
   });
-
-  if (!result.success) {
-    throw new Error(
-      typeof result.error === 'string' ? result.error : 'Firecrawl scrape failed'
-    );
-  }
 
   const markdown = sanitizeText(result.markdown ?? '', 30000);
 
